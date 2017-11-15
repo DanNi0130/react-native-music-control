@@ -4,18 +4,17 @@
  */
 'use strict';
 
-import { NativeModules, NativeEventEmitter } from 'react-native';
+import {NativeModules, NativeEventEmitter} from 'react-native';
 const NativeMusicControl = NativeModules.MusicControlManager;
 import resolveAssetSource from 'react-native/Libraries/Image/resolveAssetSource';
 
 /**
  * High-level docs for the MusicControl iOS API can be written here.
  */
-var handlers = { };
+var handlers = {};
 var subscription = null;
 
 var MusicControl = {
-
   STATE_PLAYING: NativeMusicControl.STATE_PLAYING,
   STATE_PAUSED: NativeMusicControl.STATE_PAUSED,
   STATE_ERROR: NativeMusicControl.STATE_PAUSED,
@@ -30,54 +29,53 @@ var MusicControl = {
   RATING_5_STARS: 0,
   RATING_PERCENTAGE: 0,
 
-  setPlayback: function (info) {
+  setPlayback: function(info) {
     // Backwards compatibility. Use updatePlayback instead.
     NativeMusicControl.updatePlayback(info);
   },
   updatePlayback: function(info) {
     NativeMusicControl.updatePlayback(info);
   },
-  enableBackgroundMode: function(enable){
-    NativeMusicControl.enableBackgroundMode(enable)
+  enableBackgroundMode: function(enable) {
+    NativeMusicControl.enableBackgroundMode(enable);
   },
-  setNowPlaying: function(info){
+  setNowPlaying: function(info) {
     // Check if we have an ios asset from react style image require
-    if(info.artwork) {
-        info.artwork = resolveAssetSource(info.artwork) || info.artwork;
+    if (info.artwork) {
+      info.artwork = resolveAssetSource(info.artwork) || info.artwork;
     }
 
     NativeMusicControl.setNowPlaying(info);
   },
-  resetNowPlaying: function(){
-    NativeMusicControl.resetNowPlaying()
+  resetNowPlaying: function() {
+    NativeMusicControl.resetNowPlaying();
   },
-  enableControl: function(controlName, bool, options = {}){
-    NativeMusicControl.enableControl(controlName, bool, options || {})
+  enableControl: function(controlName, bool, options = {}) {
+    NativeMusicControl.enableControl(controlName, bool, options || {});
   },
-  handleCommand: function(commandName){
-    if(handlers[commandName]){
-      handlers[commandName]()
+  handleCommand: function(commandName, value) {
+    if (handlers[commandName]) {
+      handlers[commandName](value);
     }
   },
-  on: function(actionName, cb){
-    if(subscription){
+  on: function(actionName, cb) {
+    if (subscription) {
       subscription.remove();
     }
-    subscription = new NativeEventEmitter(NativeMusicControl).addListener(
-      'RNMusicControlEvent',
-      (event) => {
-        MusicControl.handleCommand(event.name)
-      }
-    );
-    handlers[actionName] = cb
+    subscription = new NativeEventEmitter(
+      NativeMusicControl
+    ).addListener('RNMusicControlEvent', event => {
+      MusicControl.handleCommand(event.name, event.value);
+    });
+    handlers[actionName] = cb;
   },
-  off: function(actionName, cb){
-    delete(handlers[actionName])
-    if(!Object.keys(handlers).length && subscription){
-      subscription.remove()
+  off: function(actionName, cb) {
+    delete handlers[actionName];
+    if (!Object.keys(handlers).length && subscription) {
+      subscription.remove();
       subscription = null;
     }
-  }
+  },
 };
 
 export default MusicControl;
